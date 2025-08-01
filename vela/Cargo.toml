@@ -7,7 +7,7 @@ description = "Quick develop table game server with Vela framework"
 authors = ["Cariers Kim <cariers.kim@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/cariers/vela"
-keywords = ["vela", "networking", "game development"]
+keywords = ["vela", "networking", "game"]
 categories = ["network-programming", "asynchronous", "game-development"]
 
 
