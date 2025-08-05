@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package vela.table;
+
+enum TableStatus {
+    IDLE = 0; // 桌子空闲    
+}
+
+//桌子信息
+message Table {
+    string id = 1; // 桌子ID
+    string name = 2; // 桌子名称
+}
+
+enum SeatStatus {
+    EMPTY = 0; // 坐位空闲
+    SEATED = 1; // 坐位已坐
+    READY = 2; // 坐位准备就绪
+    GAMING = 3; // 坐位正在游戏中
+}
+
+//坐位信息
+message Seat {
+    uint32 index = 1; // 坐位序号
+    string name = 2; // 坐位名称
+    SeatStatus status = 3; // 坐位状态
+    string player_id = 4; // 玩家ID
+}
+
+message TableInfoNtf {
+    Table table = 1; // 桌子信息
+    repeated Seat seats = 2; // 坐位信息
+}
+
+message SeatStatusNtf {
+    uint32 index = 2; // 坐位序号
+    SeatStatus status = 3; // 坐位状态
+    string player_id = 1; // 玩家ID
+}
+
+// 加入桌子
+message JoinTableReq {
+    string table_id = 1; // 桌子ID
+    string token = 2; // 玩家令牌
+}
+
+message SitDownReq {
+    uint32 index = 1; // 坐位序号
+}
+
+// 请求加入失败
+message JoinTableResp {
+    uint32 result = 1; // 结果码
+}
+
+/// 协议说明
+// 1. 请求加入桌子时，发送 JoinTableReq 消息
+// 2. 服务端如果失败返回 JoinTableResp 消息，包含结果码
+// 3. 如果成功发送 TableInfoNtf 消息，包含桌子和坐位信息
+
+message IncomingMessage {
+    oneof message {
+        JoinTableReq join_table_req = 1; // 请求加入桌子
+    }
+}
+
+message OutgoingMessage {
+    oneof message {
+        JoinTableResp join_table_resp = 1; // 加入桌子响应
+
+        TableInfoNtf table_info_ntf = 101; // 桌子信息通知
+        SeatStatusNtf seat_status_ntf = 102; // 坐位状态通知
+    }
+}

@@ -5,3 +5,12 @@ rust-version.workspace = true
 edition.workspace = true
 
 [dependencies]
+prost.workspace = true
+prost-types.workspace = true
+futures.workspace = true
+asynchronous-codec.workspace = true
+pin-project = "1.1.10"
+thiserror.workspace = true
+jsonwebtoken = "9.3.1"
+volans = {workspace = true, features = ["swarm"]}
+serde = "1.0.219"
