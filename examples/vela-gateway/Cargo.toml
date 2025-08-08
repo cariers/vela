@@ -16,3 +16,4 @@ futures-timer = "3.0.3"
 vela-connect.workspace = true
 vela-protobuf = {workspace = true, features = ["connect"]}
 vela-core = {workspace = true}
+dotenvy = "0.15.7"
