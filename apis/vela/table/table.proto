@@ -7,7 +7,7 @@ enum TableStatus {
 }
 
 //桌子信息
-message Table {
+message TableInfo {
     string id = 1; // 桌子ID
     string name = 2; // 桌子名称
 }
@@ -28,8 +28,9 @@ message Seat {
 }
 
 message TableInfoNtf {
-    Table table = 1; // 桌子信息
+    TableInfo table = 1; // 桌子信息
     repeated Seat seats = 2; // 坐位信息
+    TableStatus status = 3; // 桌子状态
 }
 
 message SeatStatusNtf {
@@ -38,20 +39,21 @@ message SeatStatusNtf {
     string player_id = 1; // 玩家ID
 }
 
-// 加入桌子
-message JoinTableReq {
-    string table_id = 1; // 桌子ID
-    string token = 2; // 玩家令牌
-}
-
 message SitDownReq {
     uint32 index = 1; // 坐位序号
 }
 
+
+message SitDownResp {
+    uint32 code = 1; // 结果码
+}
+
 // 请求加入失败
 message JoinTableResp {
-    uint32 result = 1; // 结果码
+    uint32 code = 1; // 结果码
 }
+
+
 
 /// 协议说明
 // 1. 请求加入桌子时，发送 JoinTableReq 消息
@@ -60,14 +62,13 @@ message JoinTableResp {
 
 message IncomingMessage {
     oneof message {
-        JoinTableReq join_table_req = 1; // 请求加入桌子
+        SitDownReq sit_down_req = 11; // 请求加入桌子
     }
 }
 
 message OutgoingMessage {
     oneof message {
-        JoinTableResp join_table_resp = 1; // 加入桌子响应
-
+        JoinTableResp join_table_resp = 11; // 加入桌子响应
         TableInfoNtf table_info_ntf = 101; // 桌子信息通知
         SeatStatusNtf seat_status_ntf = 102; // 坐位状态通知
     }

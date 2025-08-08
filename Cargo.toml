@@ -1,5 +1,5 @@
 [workspace]
-members = ["vela", "vela-core", "protocols/vela-connect", "examples/vela-gateway", "protocols/vela-table"]
+members = [ "protocols/vela-connect","vela", "vela-core", "vela-protobuf", "protocols/vela-request", "examples/vela-gateway"]
 resolver = "3"
 
 [workspace.package]
@@ -7,17 +7,18 @@ rust-version = "1.88.0"
 edition = "2024"
 
 [workspace.dependencies]
-volans = "0.1.0"
+volans = {version = "0.1.1"}
 prost = "0.14.1"
 futures = "0.3.31"
 thiserror = "2.0"
 tracing = "0.1"
 tokio = "1.47"
-actix = "0.13.5"
 prost-types = "0.14.1"
 asynchronous-codec = "0.7.0"
 
 vela-core = { path = "vela-core" }
+vela-protobuf = { path = "vela-protobuf" }
 
 # protocols
-vela-connect = { path = "protocols/vela-connect"}
+vela-request = { path = "protocols/vela-request" ,version = "0.1.0"}
+vela-connect = { path = "protocols/vela-connect", version = "0.1.0" }

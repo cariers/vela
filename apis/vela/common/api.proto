@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package vela.common;
+
+import "vela/common/metadata.proto";
+import "vela/common/status.proto";
+
+message Request {
+    string service = 2;
+    repeated Metadata metadata = 3; // 请求的元数据
+    bytes payload = 4;   
+}
+
+message Response {
+    Status status = 1; // 响应状态
+    repeated Metadata metadata = 2; // 请求的元数据
+    bytes payload = 3;
+}

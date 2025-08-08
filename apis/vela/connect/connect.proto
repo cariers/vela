@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "vela/common/status.proto";
+
+package vela.connect;
+
+// 交换信息服务端和客户端之间的连接信息
+message Info {
+    string name = 1; // 客户端名称
+    string version = 2; // 客户端版本
+}

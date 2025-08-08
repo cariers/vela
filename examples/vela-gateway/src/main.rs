@@ -1,11 +1,13 @@
 use std::{collections::HashMap, pin::Pin};
 
 use futures::StreamExt;
+use vela_core::{authenticate::JwtAuthenticator, jwt};
+use vela_protobuf::connect::Info;
 use volans::{
     Transport,
     core::{PeerId, Url},
-    muxing, plaintext,
-    swarm::{self, NetworkIncomingBehavior, NetworkOutgoingBehavior},
+    muxing, plaintext, request,
+    swarm::{self, NetworkIncomingBehavior, NetworkOutgoingBehavior, client, server},
     ws,
 };
 
@@ -21,13 +23,13 @@ impl swarm::Executor for TokioExecutor {
 #[derive(NetworkIncomingBehavior)]
 struct GatewayInboundBehavior {
     ping: volans::ping::inbound::Behavior,
-    connect: vela_connect::inbound::Behavior,
+    connect: vela_connect::server::Behavior<JwtAuthenticator>,
 }
 
 #[derive(NetworkOutgoingBehavior)]
 struct GatewayOutboundBehavior {
     ping: volans::ping::outbound::Behavior,
-    connect: vela_connect::outbound::Behavior,
+    connect: vela_connect::client::Behavior,
 }
 
 #[tokio::main]
@@ -58,10 +60,16 @@ async fn main() -> anyhow::Result<()> {
         .multiplex(muxing_upgrade)
         .boxed();
 
-    let connect = vela_connect::inbound::Behavior::new(vela_connect::protocol::ServerInfo {
-        name: "Vela Gateway".to_string(),
-        version: "0.1.0".to_string(),
-    });
+    let jwt = JwtAuthenticator::new(jwt::DecodingKey::from_secret(b"test"));
+
+    let connect = vela_connect::server::Behavior::new(
+        Info {
+            name: "Vela Gateway".to_string(),
+            version: "0.1.0".to_string(),
+        },
+        jwt,
+        request::Config::default(),
+    );
 
     let behavior = GatewayInboundBehavior {
         ping: volans::ping::inbound::Behavior::default(),
@@ -85,7 +93,13 @@ async fn main() -> anyhow::Result<()> {
     });
 
     while let Some(event) = swarm.next().await {
-        tracing::info!("Server Swarm event: {:?}", event);
+        match event {
+            server::SwarmEvent::Behavior(GatewayInboundBehaviorEvent::Connect(event)) => {
+                tracing::info!("Server Connect event: {:?}", event);
+            }
+            server::SwarmEvent::Behavior(GatewayInboundBehaviorEvent::Ping(_)) => {}
+            _ => tracing::info!("Server Swarm event: {:?}", event),
+        }
     }
     Ok(())
 }
@@ -109,12 +123,13 @@ async fn start_client() -> anyhow::Result<()> {
         .multiplex(muxing_upgrade)
         .boxed();
 
-    let connect = vela_connect::outbound::Behavior::new(vela_connect::protocol::ConnectInfo {
-        name: "Vela Gateway Client".to_string(),
-        version: "0.1.0".to_string(),
-        token: "example-token".to_string(),
-        metadata: HashMap::new(),
-    });
+    let connect = vela_connect::client::Behavior::new(
+        Info {
+            name: "Vela Gateway".to_string(),
+            version: "0.1.0".to_string(),
+        },
+        request::Config::default(),
+    );
 
     let behavior = GatewayOutboundBehavior {
         ping: volans::ping::outbound::Behavior::default(),
@@ -128,10 +143,25 @@ async fn start_client() -> anyhow::Result<()> {
         swarm::connection::PoolConfig::new(Box::new(TokioExecutor)),
     );
 
-    let _ = swarm.dial(swarm::DialOpts::new(addr, None)).unwrap();
+    let _ = swarm.dial(swarm::DialOpts::new(Some(addr), None)).unwrap();
+
+    let token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJzc19hYmNkIiwic3ViIjoicHlfMTIzNDU2IiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjIxNDY5NTkwMjJ9.tyGVTHlbgMKFNQNjvMOV32MtQuzIVLxcBddjwVX78ME".to_string();
 
     while let Some(event) = swarm.next().await {
-        tracing::info!("Client Swarm event: {:?}", event);
+        match event {
+            client::SwarmEvent::ConnectionEstablished { peer_id, addr, .. } => {
+                tracing::info!("Client connected to {} at {}", peer_id, addr);
+                swarm
+                    .behavior_mut()
+                    .connect
+                    .send_authentication(peer_id, token.clone());
+            }
+            client::SwarmEvent::Behavior(GatewayOutboundBehaviorEvent::Connect(event)) => {
+                tracing::info!("Client Connect event: {:?}", event);
+            }
+            client::SwarmEvent::Behavior(GatewayOutboundBehaviorEvent::Ping(_)) => {}
+            _ => tracing::info!("Client Swarm event: {:?}", event),
+        }
     }
     Ok(())
 }

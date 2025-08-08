@@ -1,12 +1,6 @@
-pub mod inbound;
-pub mod outbound;
-pub mod protocol;
+pub mod client;
+pub mod server;
 
-use volans::{core::PeerId, swarm::ConnectionId};
+use volans::swarm::StreamProtocol;
 
-#[derive(Debug)]
-pub struct Event<TInfo> {
-    pub peer_id: PeerId,
-    pub connection: ConnectionId,
-    pub info: TInfo,
-}
+pub const PROTOCOL_NAME: StreamProtocol = StreamProtocol::new("/v1/connect");
