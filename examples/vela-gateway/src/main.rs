@@ -41,6 +41,7 @@ async fn main() -> anyhow::Result<()> {
         .with_thread_ids(true)
         .with_file(true)
         .with_line_number(true)
+        .with_timer(tracing_subscriber::fmt::time::UtcTime::rfc_3339())
         .init();
 
     tracing::info!("Starting TCP Echo Example");
