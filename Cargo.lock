@@ -1641,6 +1641,8 @@ checksum = "eb066959b24b5196ae73cb057f45598450d2c5f71460e98c49b738086eff9c06"
 dependencies = [
  "asynchronous-codec",
  "bytes",
+ "futures-io",
+ "futures-util",
 ]
 
 [[package]]
@@ -1768,19 +1770,34 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "volans"
-version = "0.1.1"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eb911ed4eddfbed70da2a697fb096e3fd9d35180373edf5dba360f4894c2205"
+checksum = "cdada5aa4fa747384d0e1b723de28172b8a1cebdbc87a6aec092df9eb9efdbad"
 dependencies = [
+ "volans-codec",
  "volans-core",
  "volans-muxing",
  "volans-ping",
  "volans-plaintext",
  "volans-request",
+ "volans-stream",
  "volans-swarm",
  "volans-tcp",
  "volans-ws",
  "volans-yamux",
+]
+
+[[package]]
+name = "volans-codec"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1164200618bc38c235742de87831b4e2dc047e8cf03cdb913a07c282ba205f32"
+dependencies = [
+ "asynchronous-codec",
+ "prost",
+ "serde",
+ "serde_json",
+ "unsigned-varint",
 ]
 
 [[package]]
@@ -1845,9 +1862,9 @@ dependencies = [
 
 [[package]]
 name = "volans-request"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a03a4e1944c6a080668c60a8dff442469cdbd28155c4423ff9734270595c1af7"
+checksum = "6f000a7483470d0fc4e361b631ca26425d9b3f23ed4114a517e6e9dd97d8742a"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1856,6 +1873,21 @@ dependencies = [
  "prost",
  "serde",
  "serde_json",
+ "smallvec",
+ "thiserror",
+ "tracing",
+ "volans-core",
+ "volans-swarm",
+]
+
+[[package]]
+name = "volans-stream"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "410b58ac05f42a53727467b4f7bb57002fc33ae213bf7a50f937361bb446ad47"
+dependencies = [
+ "futures",
+ "parking_lot",
  "smallvec",
  "thiserror",
  "tracing",

@@ -6,11 +6,7 @@ use std::io;
 use async_trait::async_trait;
 use futures::{AsyncRead, AsyncWrite};
 use vela_protobuf::common;
-use volans::{
-    core::PeerId,
-    request::{self, codec::ProtobufCodec},
-    swarm::{ConnectionId, StreamProtocol},
-};
+use volans::{request, swarm::StreamProtocol};
 
 pub use volans::request::{Config, InboundFailure, OutboundFailure, RequestId};
 
@@ -68,9 +64,31 @@ pub struct Response<B> {
     payload: Result<B, common::Status>,
 }
 
+impl<B> Response<B> {
+    pub fn new(metadata: Vec<common::Metadata>, payload: Result<B, common::Status>) -> Self {
+        Self { metadata, payload }
+    }
+
+    pub fn metadata(&self) -> &Vec<common::Metadata> {
+        &self.metadata
+    }
+
+    pub fn metadata_mut(&mut self) -> &mut Vec<common::Metadata> {
+        &mut self.metadata
+    }
+
+    pub fn payload(&self) -> &Result<B, common::Status> {
+        &self.payload
+    }
+
+    pub fn into_payload(self) -> Result<B, common::Status> {
+        self.payload
+    }
+}
+
 #[derive(Clone)]
 pub struct Codec<TInput, TOutput> {
-    inner: ProtobufCodec<common::Request, common::Response>,
+    inner: request::codec::ProtobufCodec<common::Request, common::Response>,
     _marker: std::marker::PhantomData<(TInput, TOutput)>,
 }
 
@@ -81,7 +99,7 @@ where
 {
     pub fn new() -> Self {
         Self {
-            inner: ProtobufCodec::new(),
+            inner: request::codec::ProtobufCodec::new(),
             _marker: std::marker::PhantomData,
         }
     }

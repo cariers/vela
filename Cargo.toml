@@ -7,7 +7,7 @@ rust-version = "1.88.0"
 edition = "2024"
 
 [workspace.dependencies]
-volans = {version = "0.1.1"}
+volans = {version = "0.1.3"}
 prost = "0.14.1"
 futures = "0.3.31"
 thiserror = "2.0"
