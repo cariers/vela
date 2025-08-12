@@ -1,7 +1,11 @@
-use std::task::{Context, Poll};
+use std::{
+    io,
+    task::{Context, Poll},
+};
 
+use vela_core::authenticate::AuthError;
 use vela_protobuf::connect::Info;
-use vela_request::{Config, Request, Response, client};
+use vela_request::{Config, Request, client};
 use volans::{
     core::{PeerId, Url},
     request::RequestId,
@@ -35,7 +39,7 @@ impl Behavior {
 }
 
 impl NetworkBehavior for Behavior {
-    type Event = client::Event<Response<Info>>;
+    type Event = Event;
     type ConnectionHandler = client::Handler<Info, Info>;
 
     fn on_connection_handler_event(
@@ -51,7 +55,72 @@ impl NetworkBehavior for Behavior {
         &mut self,
         cx: &mut Context<'_>,
     ) -> Poll<BehaviorEvent<Self::Event, THandlerAction<Self>>> {
-        self.inner.poll(cx)
+        loop {
+            match self.inner.poll(cx) {
+                Poll::Ready(BehaviorEvent::Behavior(event)) => match event {
+                    client::Event::Failure {
+                        peer_id,
+                        connection_id,
+                        request_id: _,
+                        cause,
+                    } => {
+                        tracing::error!("身份验证错误 {}: {:?}", peer_id, cause);
+                        return Poll::Ready(BehaviorEvent::CloseConnection {
+                            peer_id: peer_id,
+                            connection: volans::swarm::behavior::CloseConnection::One(
+                                connection_id,
+                            ),
+                        });
+                    }
+                    client::Event::Response {
+                        peer_id,
+                        connection_id,
+                        request_id: _,
+                        response,
+                    } => match response.into_payload() {
+                        Ok(info) => {
+                            return Poll::Ready(BehaviorEvent::Behavior(Event::Authenticated {
+                                peer_id: peer_id,
+                                connection_id: connection_id,
+                                info: info,
+                            }));
+                        }
+                        Err(status) => {
+                            tracing::warn!("身份验证失败 {}: {:?}", peer_id, status);
+                            return Poll::Ready(BehaviorEvent::CloseConnection {
+                                peer_id: peer_id,
+                                connection: volans::swarm::behavior::CloseConnection::One(
+                                    connection_id,
+                                ),
+                            });
+                        }
+                    },
+                },
+                Poll::Ready(BehaviorEvent::HandlerAction {
+                    peer_id,
+                    handler,
+                    action,
+                }) => {
+                    return Poll::Ready(BehaviorEvent::HandlerAction {
+                        peer_id,
+                        handler,
+                        action,
+                    });
+                }
+                Poll::Ready(BehaviorEvent::CloseConnection {
+                    peer_id,
+                    connection,
+                }) => {
+                    return Poll::Ready(BehaviorEvent::CloseConnection {
+                        peer_id,
+                        connection,
+                    });
+                }
+                Poll::Pending => {}
+                _ => unreachable!("Unexpected event"),
+            }
+            return Poll::Pending;
+        }
     }
 }
 
@@ -92,4 +161,36 @@ impl NetworkOutgoingBehavior for Behavior {
     fn poll_dial(&mut self, cx: &mut Context<'_>) -> Poll<DialOpts> {
         self.inner.poll_dial(cx)
     }
+}
+
+/// 行为事件枚举，表示认证过程中可能发生的事件。
+#[derive(Debug)]
+pub enum Event {
+    /// 认证成功。
+    Authenticated {
+        /// 对端节点 ID。
+        peer_id: PeerId,
+        /// 连接 ID。
+        connection_id: ConnectionId,
+        /// 玩家 ID。
+        info: Info,
+    },
+    /// 认证失败。
+    Unauthenticated {
+        /// 对端节点 ID。
+        peer_id: PeerId,
+        /// 连接 ID。
+        connection_id: ConnectionId,
+        /// 认证失败的原因。
+        cause: AuthError,
+    },
+    /// 认证过程中发生错误。
+    AuthenticateFailure {
+        /// 对端节点 ID。
+        peer_id: PeerId,
+        /// 连接 ID。
+        connection_id: ConnectionId,
+        /// 错误信息。
+        error: io::Error,
+    },
 }
