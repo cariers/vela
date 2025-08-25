@@ -2,7 +2,7 @@ use std::{
     collections::VecDeque,
     convert::Infallible,
     fmt, io, mem,
-    task::{Context, Poll},
+    task::{Context, Poll, Waker},
 };
 
 use futures::StreamExt;
@@ -105,6 +105,7 @@ where
         _user_data: Self::OutboundUserData,
         substream: <Self::OutboundUpgrade as OutboundUpgradeSend>::Output,
     ) {
+        tracing::debug!("Stream upgrade successful");
         self.active_stream = ReceiverState::Receiving {
             stream: FramedRead::new(substream, self.codec.clone()),
         };
@@ -115,6 +116,7 @@ where
         _user_data: Self::OutboundUserData,
         error: StreamUpgradeError<<Self::OutboundUpgrade as OutboundUpgradeSend>::Error>,
     ) {
+        tracing::debug!("Stream upgrade error: {:?}", error);
         self.active_stream = ReceiverState::None;
         match error {
             StreamUpgradeError::NegotiationFailed => {
@@ -140,6 +142,7 @@ where
         if matches!(self.active_stream, ReceiverState::None) {
             let upgrade = ReadyUpgrade::new(self.protocol.clone());
             self.active_stream = ReceiverState::OpenStream;
+            tracing::debug!("Opening stream");
             return Poll::Ready(SubstreamProtocol::new(upgrade, ()));
         }
         Poll::Pending

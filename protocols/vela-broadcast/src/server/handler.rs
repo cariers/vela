@@ -92,10 +92,11 @@ where
                     receiver,
                     message,
                 } => match stream.poll_ready_unpin(cx) {
-                    Poll::Ready(Ok(())) => match stream.start_send_unpin(message) {
+                    Poll::Ready(Ok(())) => match stream.start_send_unpin(message.clone()) {
                         Ok(()) => {
+                            tracing::debug!("Send broadcast message: {:?}", message);
                             // 重置接收状态
-                            self.active_stream = SendState::Receiving { stream, receiver };
+                            self.active_stream = SendState::Flushing { stream, receiver };
                             continue;
                         }
                         Err(e) => {
@@ -113,6 +114,22 @@ where
                             receiver,
                             message,
                         };
+                    }
+                },
+                SendState::Flushing {
+                    mut stream,
+                    receiver,
+                } => match stream.poll_flush_unpin(cx) {
+                    Poll::Ready(Ok(())) => {
+                        tracing::debug!("Flushed broadcast message");
+                        self.active_stream = SendState::Receiving { stream, receiver };
+                        continue;
+                    }
+                    Poll::Ready(Err(e)) => {
+                        tracing::debug!("Error flushing broadcast message: {:?}", e);
+                    }
+                    Poll::Pending => {
+                        self.active_stream = SendState::Flushing { stream, receiver };
                     }
                 },
             }
@@ -145,7 +162,8 @@ where
         self.active_stream = SendState::Receiving {
             stream: framed,
             receiver,
-        }
+        };
+        tracing::debug!("New inbound substream Broadcast");
     }
 
     fn on_upgrade_error(
@@ -171,5 +189,9 @@ where
         stream: FramedWrite<Substream, TCodec>,
         receiver: Receiver<TCodec::Item<'static>>,
         message: TCodec::Item<'static>,
+    },
+    Flushing {
+        stream: FramedWrite<Substream, TCodec>,
+        receiver: Receiver<TCodec::Item<'static>>,
     },
 }

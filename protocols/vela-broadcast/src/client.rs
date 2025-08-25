@@ -15,6 +15,7 @@ use volans::{
     },
 };
 
+#[derive(Debug)]
 pub struct Behavior<TCodec>
 where
     TCodec: Decoder + Clone + Send + 'static,
@@ -25,6 +26,22 @@ where
     protocol: StreamProtocol,
     codec: TCodec,
     pending_events: VecDeque<BroadcastEvent<TCodec::Item>>,
+}
+
+impl<TCodec> Behavior<TCodec>
+where
+    TCodec: Decoder + Clone + Send + 'static,
+    TCodec::Item: fmt::Debug + Send,
+    TCodec::Error: fmt::Debug + Send,
+    TCodec::Error: Into<io::Error>,
+{
+    pub fn new(protocol: StreamProtocol, codec: TCodec) -> Self {
+        Self {
+            protocol,
+            codec,
+            pending_events: VecDeque::new(),
+        }
+    }
 }
 
 impl<TCodec> NetworkBehavior for Behavior<TCodec>
@@ -100,6 +117,7 @@ where
     }
 }
 
+#[derive(Debug)]
 pub enum BroadcastEvent<T> {
     Message {
         peer_id: PeerId,

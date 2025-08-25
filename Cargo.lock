@@ -2142,6 +2142,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "vela-broadcast",
  "vela-connect",
  "vela-core",
  "vela-protobuf",

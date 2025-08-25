@@ -21,3 +21,4 @@ vela-connect.workspace = true
 vela-protobuf = { workspace = true, features = ["connect"] }
 vela-core = { workspace = true }
 dotenvy = "0.15.7"
+vela-broadcast.workspace = true

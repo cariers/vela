@@ -1,14 +1,10 @@
-use std::{collections::HashMap, pin::Pin, str::FromStr};
+use std::{pin::Pin, str::FromStr};
 
 use futures::StreamExt;
 use vela_core::{authenticate::JwtAuthenticator, jwt};
 use vela_protobuf::connect::Info;
 use volans::{
-    Transport,
-    core::{Multiaddr, PeerId, identity::KeyPair},
-    muxing, plaintext, request,
-    swarm::{self, NetworkIncomingBehavior, NetworkOutgoingBehavior, client, server},
-    ws,
+    codec::JsonUviCodec, core::{identity::KeyPair, Multiaddr, PeerId}, muxing, plaintext, request, swarm::{self, client, server, NetworkIncomingBehavior, NetworkOutgoingBehavior, StreamProtocol}, ws, Transport
 };
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -24,12 +20,14 @@ impl swarm::Executor for TokioExecutor {
 struct GatewayInboundBehavior {
     ping: volans::ping::inbound::Behavior,
     connect: vela_connect::server::Behavior<JwtAuthenticator>,
+    broadcast: vela_broadcast::server::Behavior<JsonUviCodec<String>>,
 }
 
 #[derive(NetworkOutgoingBehavior)]
 struct GatewayOutboundBehavior {
     ping: volans::ping::outbound::Behavior,
     connect: vela_connect::client::Behavior,
+    broadcast: vela_broadcast::client::Behavior<JsonUviCodec<String>>,
 }
 
 #[tokio::main]
@@ -64,6 +62,9 @@ async fn main() -> anyhow::Result<()> {
 
     let jwt = JwtAuthenticator::new(jwt::DecodingKey::from_secret(b"test"));
 
+    let protocol = StreamProtocol::new("/vela/broadcast/0.1.0");
+    let codec = JsonUviCodec::<String>::default();
+
     let connect = vela_connect::server::Behavior::new(
         Info {
             name: "Vela Gateway".to_string(),
@@ -76,6 +77,7 @@ async fn main() -> anyhow::Result<()> {
     let behavior = GatewayInboundBehavior {
         ping: volans::ping::inbound::Behavior::default(),
         connect,
+        broadcast: vela_broadcast::Behavior::new(protocol, codec, 100),
     };
 
     let mut swarm = swarm::server::Swarm::new(
@@ -85,7 +87,19 @@ async fn main() -> anyhow::Result<()> {
         swarm::connection::PoolConfig::new(Box::new(TokioExecutor)),
     );
 
+    let broadcaster = swarm.behavior().broadcast.broadcaster();
+
     let _ = swarm.listen_on(addr.clone())?;
+
+    tokio::spawn(async move {
+        let mut i = 0;
+        loop {
+            i += 1;
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            let _ = broadcaster.try_broadcast(format!("Hello world! {}", i).to_string());
+        }
+    });
+
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
@@ -133,9 +147,13 @@ async fn start_client() -> anyhow::Result<()> {
         request::Config::default(),
     );
 
+    let protocol = StreamProtocol::new("/vela/broadcast/0.1.0");
+    let codec = JsonUviCodec::<String>::default();
+
     let behavior = GatewayOutboundBehavior {
         ping: volans::ping::outbound::Behavior::default(),
         connect,
+        broadcast: vela_broadcast::client::Behavior::new(protocol, codec),
     };
 
     let mut swarm = swarm::client::Swarm::new(
