@@ -5,10 +5,15 @@ rust-version.workspace = true
 edition.workspace = true
 
 [dependencies]
-vela-protobuf = {workspace = true, features = ["connect"]}
 vela-core = {workspace = true}
 volans ={ workspace = true, features = ["swarm"] }
 tracing.workspace = true
 futures.workspace = true
 vela-request = {workspace = true}
 futures-bounded = { version = "0.3.0", features = ["futures-timer"] }
+prost = {workspace = true}
+prost-types.workspace = true
+
+[build-dependencies]
+prost-build = "0.14.1"
+

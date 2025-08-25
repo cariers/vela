@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-import "vela/common/status.proto";
 
 package vela.connect;
 

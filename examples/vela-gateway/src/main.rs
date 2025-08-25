@@ -1,10 +1,17 @@
 use std::{pin::Pin, str::FromStr};
 
 use futures::StreamExt;
+use vela_connect::pb::Info;
 use vela_core::{authenticate::JwtAuthenticator, jwt};
-use vela_protobuf::connect::Info;
 use volans::{
-    codec::JsonUviCodec, core::{identity::KeyPair, Multiaddr, PeerId}, muxing, plaintext, request, swarm::{self, client, server, NetworkIncomingBehavior, NetworkOutgoingBehavior, StreamProtocol}, ws, Transport
+    Transport,
+    codec::JsonUviCodec,
+    core::{Multiaddr, PeerId, identity::KeyPair},
+    muxing, plaintext, request,
+    swarm::{
+        self, NetworkIncomingBehavior, NetworkOutgoingBehavior, StreamProtocol, client, server,
+    },
+    ws,
 };
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -99,7 +106,6 @@ async fn main() -> anyhow::Result<()> {
             let _ = broadcaster.try_broadcast(format!("Hello world! {}", i).to_string());
         }
     });
-
 
     tokio::spawn(async move {
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;

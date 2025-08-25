@@ -4,7 +4,6 @@ use std::{
 };
 
 use vela_core::authenticate::AuthError;
-use vela_protobuf::connect::Info;
 use vela_request::{Config, Request, client};
 use volans::{
     core::{Multiaddr, PeerId},
@@ -16,7 +15,7 @@ use volans::{
     },
 };
 
-use crate::PROTOCOL_NAME;
+use crate::{PROTOCOL_NAME, pb::Info};
 
 pub struct Behavior {
     info: Info,

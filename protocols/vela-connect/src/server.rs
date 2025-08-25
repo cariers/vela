@@ -9,9 +9,9 @@ use futures::FutureExt;
 use futures_bounded::{Delay, FuturesMap};
 use vela_core::{
     authenticate::{AuthError, Authenticator},
+    common::Code,
     ids::{PlayerId, SessionId},
 };
-use vela_protobuf::{common::Code, connect::Info};
 use vela_request::{Config, Request, RequestId, Responder, server};
 use volans::{
     core::{Multiaddr, PeerId},
@@ -22,7 +22,7 @@ use volans::{
     },
 };
 
-use crate::PROTOCOL_NAME;
+use crate::{PROTOCOL_NAME, pb::Info};
 
 pub struct Behavior<TAuthenticator> {
     info: Info,

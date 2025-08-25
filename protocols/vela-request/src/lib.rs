@@ -5,7 +5,7 @@ use std::io;
 
 use async_trait::async_trait;
 use futures::{AsyncRead, AsyncWrite};
-use vela_protobuf::common;
+use vela_core::common;
 use volans::{request, swarm::StreamProtocol};
 
 pub use volans::request::{Config, InboundFailure, OutboundFailure, RequestId};

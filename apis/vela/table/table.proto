@@ -3,7 +3,8 @@ syntax = "proto3";
 package vela.table;
 
 enum TableStatus {
-    IDLE = 0; // 桌子空闲    
+    TABLE_IDLE = 0; // 桌子空闲(空闲+所有人准备，切换至游戏开始)
+    TABLE_GAMING = 1; // 桌子正在游戏中
 }
 
 //桌子信息
@@ -13,10 +14,10 @@ message TableInfo {
 }
 
 enum SeatStatus {
-    EMPTY = 0; // 坐位空闲
-    SEATED = 1; // 坐位已坐
-    READY = 2; // 坐位准备就绪
-    GAMING = 3; // 坐位正在游戏中
+    SEAT_IDLE = 0; // 坐位空闲
+    SEAT_OCCUPY = 1; // 坐位已占用（必须存在玩家）
+    SEAT_READY = 2; // 坐位准备就绪
+    SEAT_GAMING = 3; // 坐位正在游戏中
 }
 
 //坐位信息
@@ -26,6 +27,26 @@ message Seat {
     SeatStatus status = 3; // 坐位状态
     string player_id = 4; // 玩家ID
 }
+
+
+message JoinTableReq {
+    string table_id = 1; // 桌子ID
+}
+
+// 请求加入失败
+message JoinTableResp {
+    uint32 code = 1; // 结果码
+}
+
+message SitDownReq {
+    uint32 index = 1; // 坐位序号
+}
+
+
+message SitDownResp {
+    uint32 code = 1; // 结果码
+}
+
 
 message TableInfoNtf {
     TableInfo table = 1; // 桌子信息
@@ -39,21 +60,6 @@ message SeatStatusNtf {
     string player_id = 1; // 玩家ID
 }
 
-message SitDownReq {
-    uint32 index = 1; // 坐位序号
-}
-
-
-message SitDownResp {
-    uint32 code = 1; // 结果码
-}
-
-// 请求加入失败
-message JoinTableResp {
-    uint32 code = 1; // 结果码
-}
-
-
 
 /// 协议说明
 // 1. 请求加入桌子时，发送 JoinTableReq 消息
@@ -62,14 +68,16 @@ message JoinTableResp {
 
 message IncomingMessage {
     oneof message {
-        SitDownReq sit_down_req = 11; // 请求加入桌子
+        JoinTableReq join_table_req = 1; // 请求加入桌子
+        SitDownReq sit_down_req = 2; // 请求坐下
     }
 }
 
 message OutgoingMessage {
     oneof message {
-        JoinTableResp join_table_resp = 11; // 加入桌子响应
-        TableInfoNtf table_info_ntf = 101; // 桌子信息通知
+        JoinTableResp join_table_resp = 1; // 加入桌子响应
+        SitDownResp sit_down_resp = 2; // 坐下响应
+        TableInfoNtf table_info_ntf = 101; // 桌子信息通知 （包含桌子和坐位信息，建议连接后由服务端发送）
         SeatStatusNtf seat_status_ntf = 102; // 坐位状态通知
     }
 }

@@ -5,7 +5,6 @@ rust-version.workspace = true
 edition.workspace = true
 
 [dependencies]
-vela-protobuf = {workspace = true, features = ["connect"]}
 vela-core = {workspace = true}
 volans = { workspace = true, features = ["swarm"] }
 tracing.workspace = true
