@@ -1,11 +1,11 @@
-use std::{collections::HashMap, pin::Pin};
+use std::{collections::HashMap, pin::Pin, str::FromStr};
 
 use futures::StreamExt;
 use vela_core::{authenticate::JwtAuthenticator, jwt};
 use vela_protobuf::connect::Info;
 use volans::{
     Transport,
-    core::{PeerId, Url},
+    core::{Multiaddr, PeerId, identity::KeyPair},
     muxing, plaintext, request,
     swarm::{self, NetworkIncomingBehavior, NetworkOutgoingBehavior, client, server},
     ws,
@@ -46,10 +46,10 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("Starting TCP Echo Example");
 
-    let addr = Url::parse("ws://0.0.0.0:8088")?;
+    let addr = Multiaddr::from_str("/ip4/0.0.0.0/tcp/8099/ws")?;
 
     let key: [u8; 32] = rand::random();
-    let local_key = plaintext::ed25519::SigningKey::from_bytes(&key);
+    let local_key = KeyPair::from_bytes(&key);
     let local_peer_id = PeerId::from_bytes(key);
 
     let identify_upgrade = plaintext::Config::new(local_key.verifying_key());
@@ -109,10 +109,10 @@ async fn main() -> anyhow::Result<()> {
 async fn start_client() -> anyhow::Result<()> {
     tracing::info!("Starting TCP Demo Client");
 
-    let addr = Url::parse("ws://0.0.0.0:8088")?;
+    let addr = Multiaddr::from_str("/ip4/0.0.0.0/tcp/8099/ws")?;
 
     let key: [u8; 32] = rand::random();
-    let local_key = plaintext::ed25519::SigningKey::from_bytes(&key);
+    let local_key = KeyPair::from_bytes(&key);
     let local_peer_id = PeerId::from_bytes(key);
 
     let identify_upgrade = plaintext::Config::new(local_key.verifying_key());

@@ -1,7 +1,7 @@
 use std::task::{Context, Poll};
 
 use volans::{
-    core::{PeerId, Url},
+    core::{Multiaddr, PeerId},
     request::{Config, InboundFailure, RequestId, server},
     swarm::{
         BehaviorEvent, ConnectionDenied, ConnectionId, ListenerEvent, NetworkBehavior,
@@ -109,8 +109,8 @@ where
         &mut self,
         id: ConnectionId,
         peer_id: PeerId,
-        local_addr: &Url,
-        remote_addr: &Url,
+        local_addr: &Multiaddr,
+        remote_addr: &Multiaddr,
     ) -> Result<Self::ConnectionHandler, ConnectionDenied> {
         self.inner
             .handle_established_connection(id, peer_id, local_addr, remote_addr)
@@ -121,8 +121,8 @@ where
         &mut self,
         id: ConnectionId,
         peer_id: PeerId,
-        local_addr: &Url,
-        remote_addr: &Url,
+        local_addr: &Multiaddr,
+        remote_addr: &Multiaddr,
     ) {
         self.inner
             .on_connection_established(id, peer_id, local_addr, remote_addr);
@@ -132,8 +132,8 @@ where
         &mut self,
         id: ConnectionId,
         peer_id: PeerId,
-        local_addr: &Url,
-        remote_addr: &Url,
+        local_addr: &Multiaddr,
+        remote_addr: &Multiaddr,
         reason: Option<&ConnectionError>,
     ) {
         self.inner
@@ -145,8 +145,8 @@ where
         &mut self,
         id: ConnectionId,
         peer_id: Option<PeerId>,
-        local_addr: &Url,
-        remote_addr: &Url,
+        local_addr: &Multiaddr,
+        remote_addr: &Multiaddr,
         error: &ListenError,
     ) {
         self.inner

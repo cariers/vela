@@ -7,7 +7,7 @@ use vela_core::authenticate::AuthError;
 use vela_protobuf::connect::Info;
 use vela_request::{Config, Request, client};
 use volans::{
-    core::{PeerId, Url},
+    core::{Multiaddr, PeerId},
     request::RequestId,
     swarm::{
         BehaviorEvent, ConnectionDenied, ConnectionId, DialOpts, NetworkBehavior,
@@ -129,12 +129,12 @@ impl NetworkOutgoingBehavior for Behavior {
         &mut self,
         id: ConnectionId,
         peer_id: PeerId,
-        addr: &Url,
+        addr: &Multiaddr,
     ) -> Result<Self::ConnectionHandler, ConnectionDenied> {
         self.inner.handle_established_connection(id, peer_id, addr)
     }
 
-    fn on_connection_established(&mut self, id: ConnectionId, peer_id: PeerId, addr: &Url) {
+    fn on_connection_established(&mut self, id: ConnectionId, peer_id: PeerId, addr: &Multiaddr) {
         self.inner.on_connection_established(id, peer_id, addr);
     }
 
@@ -142,7 +142,7 @@ impl NetworkOutgoingBehavior for Behavior {
         &mut self,
         id: ConnectionId,
         peer_id: PeerId,
-        addr: &Url,
+        addr: &Multiaddr,
         reason: Option<&ConnectionError>,
     ) {
         self.inner.on_connection_closed(id, peer_id, addr, reason);
@@ -152,7 +152,7 @@ impl NetworkOutgoingBehavior for Behavior {
         &mut self,
         id: ConnectionId,
         peer_id: Option<PeerId>,
-        addr: Option<&Url>,
+        addr: Option<&Multiaddr>,
         error: &DialError,
     ) {
         self.inner.on_dial_failure(id, peer_id, addr, error);
