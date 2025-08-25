@@ -1,0 +1,14 @@
+[package]
+name = "vela-broadcast"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+
+[dependencies]
+vela-protobuf = {workspace = true, features = ["connect"]}
+vela-core = {workspace = true}
+volans = { workspace = true, features = ["swarm"] }
+tracing.workspace = true
+futures.workspace = true
+vela-request = {workspace = true}
+async-broadcast = "0.7.2"

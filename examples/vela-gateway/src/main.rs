@@ -109,7 +109,7 @@ async fn main() -> anyhow::Result<()> {
 async fn start_client() -> anyhow::Result<()> {
     tracing::info!("Starting TCP Demo Client");
 
-    let addr = Multiaddr::from_str("/ip4/0.0.0.0/tcp/8099/ws")?;
+    let addr = Multiaddr::from_str("/ip4/127.0.0.1/tcp/8099/ws")?;
 
     let key: [u8; 32] = rand::random();
     let local_key = KeyPair::from_bytes(&key);

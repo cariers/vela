@@ -1,5 +1,5 @@
 [workspace]
-members = [ "protocols/vela-connect","vela", "vela-core", "vela-protobuf", "protocols/vela-request", "examples/vela-gateway"]
+members = [ "protocols/vela-connect","vela", "vela-core", "vela-protobuf", "protocols/vela-request", "examples/vela-gateway", "protocols/vela-broadcast"]
 resolver = "3"
 
 [workspace.package]
