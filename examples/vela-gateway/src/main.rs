@@ -1,8 +1,9 @@
 use std::{pin::Pin, str::FromStr};
 
-use futures::StreamExt;
+use futures::{StreamExt, channel::mpsc};
 use vela_connect::pb::Info;
-use vela_core::{authenticate::JwtAuthenticator, jwt};
+use vela_core::{authenticate::JwtAuthenticator, ids::SessionId, jwt};
+use vela_table::{SessionAccepted, TableId};
 use volans::{
     Transport,
     codec::JsonUviCodec,
@@ -28,6 +29,7 @@ struct GatewayInboundBehavior {
     ping: volans::ping::inbound::Behavior,
     connect: vela_connect::server::Behavior<JwtAuthenticator>,
     broadcast: vela_broadcast::server::Behavior<JsonUviCodec<String>>,
+    table: vela_table::Behavior,
 }
 
 #[derive(NetworkOutgoingBehavior)]
@@ -85,6 +87,7 @@ async fn main() -> anyhow::Result<()> {
         ping: volans::ping::inbound::Behavior::default(),
         connect,
         broadcast: vela_broadcast::Behavior::new(protocol, codec, 100),
+        table: vela_table::Behavior::default(),
     };
 
     let mut swarm = swarm::server::Swarm::new(
@@ -120,6 +123,29 @@ async fn main() -> anyhow::Result<()> {
                 tracing::info!("Server Connect event: {:?}", event);
             }
             server::SwarmEvent::Behavior(GatewayInboundBehaviorEvent::Ping(_)) => {}
+            server::SwarmEvent::Behavior(GatewayInboundBehaviorEvent::Table(ev)) => {
+                tracing::info!("Table event: {:?}", ev);
+                match ev {
+                    vela_table::Event::Authenticate {
+                        connection_id: _,
+                        peer_id: _,
+                        request: _,
+                        responder,
+                    } => {
+                        let (_table_event_sender, table_event_receiver) = mpsc::channel(100);
+                        let (session_event_sender, _session_event_receiver) = mpsc::channel(100);
+
+                        let _ = responder.send(Ok(SessionAccepted {
+                            session_id: SessionId::default(),
+                            table_id: TableId::default(),
+                            event_sender: session_event_sender,
+                            event_receiver: table_event_receiver,
+                            table: vela_table::proto::Table::default(),
+                        }));
+                    }
+                    _ => {}
+                }
+            }
             _ => tracing::info!("Server Swarm event: {:?}", event),
         }
     }

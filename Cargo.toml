@@ -6,6 +6,7 @@ members = [
     "protocols/vela-broadcast",
     "protocols/vela-table",
 
+
     # 打包所有Crate
     "vela",
 
@@ -27,7 +28,8 @@ tracing = "0.1"
 tokio = "1.47"
 prost-types = "0.14.1"
 asynchronous-codec = "0.7.0"
-
+futures-timer = "3.0.3"
+futures-bounded = { version = "0.3.0", features = ["futures-timer"] }
 vela-core = { path = "vela-core" }
 
 # protocols

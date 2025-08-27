@@ -1,31 +1,33 @@
+#[macro_export]
 macro_rules! def_id_serde_impls {
     ($struct_name:ident) => {
-        impl serde::Serialize for $struct_name {
+        impl $crate::serde::Serialize for $struct_name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
-                S: serde::ser::Serializer,
+                S: $crate::serde::ser::Serializer,
             {
                 self.as_str().serialize(serializer)
             }
         }
 
-        impl<'de> serde::Deserialize<'de> for $struct_name {
+        impl<'de> $crate::serde::Deserialize<'de> for $struct_name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
-                D: serde::de::Deserializer<'de>,
+                D: $crate::serde::de::Deserializer<'de>,
             {
-                let s: String = serde::Deserialize::deserialize(deserializer)?;
-                s.parse::<Self>().map_err(::serde::de::Error::custom)
+                let s: String = $crate::serde::Deserialize::deserialize(deserializer)?;
+                s.parse::<Self>().map_err($crate::serde::de::Error::custom)
             }
         }
     };
     ($struct_name:ident, _) => {};
 }
 
+#[macro_export]
 macro_rules! def_id {
     ($struct_name:ident: String) => {
         #[derive(Clone, Debug, Default, Eq, PartialEq, Hash)]
-        pub struct $struct_name(smol_str::SmolStr);
+        pub struct $struct_name(::smol_str::SmolStr);
         impl $struct_name {
             /// Extracts a string slice containing the entire id.
             #[inline(always)]
@@ -111,7 +113,7 @@ macro_rules! def_id {
     };
     ($struct_name:ident, $prefix:literal $(| $alt_prefix:literal)* $(, { $generate_hint:tt })?) => {
         #[derive(Clone, Debug, Default, Eq, PartialEq, Hash)]
-        pub struct $struct_name(smol_str::SmolStr);
+        pub struct $struct_name($crate::smol_str::SmolStr);
 
         impl $struct_name {
 
@@ -181,13 +183,13 @@ macro_rules! def_id {
         }
 
         impl std::str::FromStr for $struct_name {
-            type Err = ParseIdError;
+            type Err = $crate::ids::ParseIdError;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 if !s.starts_with($prefix) $(
                     && !s.starts_with($alt_prefix)
                 )* {
-                    Err(ParseIdError {
+                    Err($crate::ids::ParseIdError {
                         typename: stringify!($struct_name),
                         expected: stringify!(id to start with $prefix $(or $alt_prefix)*),
                     })
@@ -197,7 +199,7 @@ macro_rules! def_id {
             }
         }
 
-        def_id_serde_impls!($struct_name $(, $generate_hint )*);
+        $crate::def_id_serde_impls!($struct_name $(, $generate_hint )*);
     };
 
     (#[optional] enum $enum_name:ident { $( $variant_name:ident($($variant_type:tt)*) ),* $(,)* }) => {
@@ -424,8 +426,8 @@ macro_rules! def_id {
 
 #[derive(Clone, Debug)]
 pub struct ParseIdError {
-    typename: &'static str,
-    expected: &'static str,
+    pub typename: &'static str,
+    pub expected: &'static str,
 }
 
 impl std::fmt::Display for ParseIdError {
@@ -442,3 +444,5 @@ impl std::error::Error for ParseIdError {
 
 def_id!(SessionId, "ss_");
 def_id!(PlayerId, "py_");
+
+def_id!(TableId, "tb_");

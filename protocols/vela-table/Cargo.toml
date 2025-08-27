@@ -9,6 +9,11 @@ prost.workspace = true
 prost-types.workspace = true
 futures.workspace = true
 thiserror.workspace = true
+volans = { workspace = true, features = ["swarm", "codec"] }
+tracing.workspace = true
+vela-core.workspace = true
+futures-timer.workspace = true
+futures-bounded.workspace = true
 
 [build-dependencies]
 prost-build = "0.14.1"

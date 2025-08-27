@@ -14,17 +14,20 @@ pub trait SessionRegistry {
 
 #[derive(Debug, Clone)]
 pub struct Session {
-    id: SessionId,
+    session_id: SessionId,
     player_id: PlayerId,
 }
 
 impl Session {
-    pub fn new(id: SessionId, player_id: PlayerId) -> Self {
-        Self { id, player_id }
+    pub fn new(session_id: SessionId, player_id: PlayerId) -> Self {
+        Self {
+            session_id,
+            player_id,
+        }
     }
 
-    pub fn id(&self) -> &SessionId {
-        &self.id
+    pub fn session_id(&self) -> &SessionId {
+        &self.session_id
     }
 
     pub fn player_id(&self) -> &PlayerId {

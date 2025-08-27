@@ -28,14 +28,14 @@ impl Shared {
     }
 
     fn insert(&mut self, session: Session) -> Result<(), Session> {
-        if self.sessions.contains_key(&session.id) {
+        if self.sessions.contains_key(&session.session_id) {
             return Err(session);
         }
         self.player_sessions
             .entry(session.player_id.clone())
             .or_default()
-            .insert(session.id.clone());
-        let _ = self.sessions.insert(session.id.clone(), session);
+            .insert(session.session_id.clone());
+        let _ = self.sessions.insert(session.session_id.clone(), session);
         Ok(())
     }
 

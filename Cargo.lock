@@ -2137,6 +2137,7 @@ dependencies = [
  "vela-broadcast",
  "vela-connect",
  "vela-core",
+ "vela-table",
  "volans",
 ]
 
@@ -2158,10 +2159,15 @@ name = "vela-table"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "futures-bounded",
+ "futures-timer",
  "prost",
  "prost-build",
  "prost-types",
  "thiserror 2.0.12",
+ "tracing",
+ "vela-core",
+ "volans",
 ]
 
 [[package]]
